@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-1-introduction-gin/router"
 	"log"
 )
 
@@ -11,22 +12,7 @@ func main() {
 	r := gin.Default()
 
 	// Definisikan route
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Halo dari Gin!",
-		})
-	})
-
-	r.POST("/post", func(c *gin.Context) {
-		var json struct {
-			Message string `json:"message"`
-		}
-		if err := c.ShouldBindJSON(&json); err == nil {
-			c.JSON(200, gin.H{"message": json.Message})
-		} else {
-			c.JSON(400, gin.H{"error": err.Error()})
-		}
-	})
+	router.SetupRouter(r)
 
 	// Jalankan server pada port 8080
 	log.Println("Running server on port 8080")
