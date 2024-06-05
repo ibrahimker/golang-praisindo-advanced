@@ -15,5 +15,4 @@ func SetupRouter(r *gin.Engine) {
 	{
 		privateEndpoint.POST("/post", handler.PostHandler)
 	}
-
 }
