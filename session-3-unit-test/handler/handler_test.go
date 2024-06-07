@@ -13,9 +13,22 @@ import (
 )
 
 func TestGetHelloMessage(t *testing.T) {
+	t.Run("Negative Case - Nama kosong", func(t *testing.T) {
+		expectedOutput := ""
+		actualOutput := handler.GetHelloMessage("")
+		// tanpa testify
+
+		//if expectedOutput != actualOutput {
+		//	t.Fail()
+		//	t.Log("expected != actual nya")
+		//}
+
+		// dengan testify
+		require.Equal(t, expectedOutput, actualOutput, "The message should be '%s'", expectedOutput)
+	})
 	t.Run("Positive Case - Correct Message", func(t *testing.T) {
-		expectedOutput := "Halo dari Gin!"
-		actualOutput := handler.GetHelloMessage()
+		expectedOutput := "Halo dari name! " + "Praisindo"
+		actualOutput := handler.GetHelloMessage("Praisindo")
 		require.Equal(t, expectedOutput, actualOutput, "The message should be '%s'", expectedOutput)
 	})
 }
@@ -40,7 +53,7 @@ func TestRootHandler(t *testing.T) {
 	// Assertions
 	assert.Equal(t, http.StatusOK, w.Code) // Check if the status code is 200
 
-	expectedBody := `{"message":"Halo dari Gin!"}`
+	expectedBody := `{"message":"Halo dari name! gin"}`
 	assert.JSONEq(t, expectedBody, w.Body.String()) // Check if the response body matches the expected JSON
 }
 

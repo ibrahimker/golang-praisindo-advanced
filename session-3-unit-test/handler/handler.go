@@ -2,13 +2,16 @@ package handler
 
 import "github.com/gin-gonic/gin"
 
-func GetHelloMessage() string {
-	return "Halo dari Gin!"
+func GetHelloMessage(name string) string {
+	if name == "" {
+		return ""
+	}
+	return "Halo dari name! " + name
 }
 
 func RootHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
-		"message": GetHelloMessage(),
+		"message": GetHelloMessage("gin"),
 	})
 }
 
