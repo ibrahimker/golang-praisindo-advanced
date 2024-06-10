@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"errors"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -9,8 +10,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	"github.com/stretchr/testify/assert"
-
 	"github.com/ibrahimker/golang-praisindo-advanced/session-6-db-pgx/entity"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-6-db-pgx/handler"
 	mock_service "github.com/ibrahimker/golang-praisindo-advanced/session-6-db-pgx/test/mock/service"
@@ -44,8 +43,8 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusCreated, resp.Code)
-		assert.JSONEq(t, `{"id":0,"name":"John Doe","email":"john@example.com","password":"password","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}`, resp.Body.String())
+		require.Equal(t, http.StatusCreated, resp.Code)
+		require.JSONEq(t, `{"id":0,"name":"John Doe","email":"john@example.com","password":"password","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}`, resp.Body.String())
 	})
 
 	t.Run("InvalidPayload_MissingName", func(t *testing.T) {
@@ -57,8 +56,8 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusBadRequest, resp.Code)
-		assert.JSONEq(t, `{"error":"name is mandatory"}`, resp.Body.String())
+		require.Equal(t, http.StatusBadRequest, resp.Code)
+		require.JSONEq(t, `{"error":"name is mandatory"}`, resp.Body.String())
 	})
 
 	t.Run("InvalidPayload_MissingEmail", func(t *testing.T) {
@@ -70,8 +69,8 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusBadRequest, resp.Code)
-		assert.JSONEq(t, `{"error":"email is mandatory"}`, resp.Body.String())
+		require.Equal(t, http.StatusBadRequest, resp.Code)
+		require.JSONEq(t, `{"error":"email is mandatory"}`, resp.Body.String())
 	})
 
 	t.Run("ServiceError", func(t *testing.T) {
@@ -89,8 +88,8 @@ func TestUserHandler_CreateUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusBadRequest, resp.Code)
-		assert.JSONEq(t, `{"error":"some service error"}`, resp.Body.String())
+		require.Equal(t, http.StatusBadRequest, resp.Code)
+		require.JSONEq(t, `{"error":"some service error"}`, resp.Body.String())
 	})
 }
 
@@ -117,8 +116,8 @@ func TestUserHandler_GetUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusOK, resp.Code)
-		assert.JSONEq(t, `{"id":1,"name":"John Doe","email":"john@example.com","password":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}`, resp.Body.String())
+		require.Equal(t, http.StatusOK, resp.Code)
+		require.JSONEq(t, `{"id":1,"name":"John Doe","email":"john@example.com","password":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}`, resp.Body.String())
 	})
 
 	t.Run("InvalidID", func(t *testing.T) {
@@ -129,8 +128,8 @@ func TestUserHandler_GetUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusBadRequest, resp.Code)
-		assert.JSONEq(t, `{"error":"Invalid ID"}`, resp.Body.String())
+		require.Equal(t, http.StatusBadRequest, resp.Code)
+		require.JSONEq(t, `{"error":"Invalid ID"}`, resp.Body.String())
 	})
 
 	t.Run("UserNotFound", func(t *testing.T) {
@@ -143,8 +142,8 @@ func TestUserHandler_GetUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusNotFound, resp.Code)
-		assert.JSONEq(t, `{"error":"User not found"}`, resp.Body.String())
+		require.Equal(t, http.StatusNotFound, resp.Code)
+		require.JSONEq(t, `{"error":"User not found"}`, resp.Body.String())
 	})
 }
 
@@ -175,8 +174,8 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusOK, resp.Code)
-		assert.JSONEq(t, `{"id":1,"name":"John Doe","email":"john@example.com","password":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}`, resp.Body.String())
+		require.Equal(t, http.StatusOK, resp.Code)
+		require.JSONEq(t, `{"id":1,"name":"John Doe","email":"john@example.com","password":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}`, resp.Body.String())
 	})
 
 	t.Run("InvalidID", func(t *testing.T) {
@@ -188,8 +187,8 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusBadRequest, resp.Code)
-		assert.JSONEq(t, `{"error":"Invalid ID"}`, resp.Body.String())
+		require.Equal(t, http.StatusBadRequest, resp.Code)
+		require.JSONEq(t, `{"error":"Invalid ID"}`, resp.Body.String())
 	})
 
 	t.Run("InvalidPayload", func(t *testing.T) {
@@ -201,8 +200,8 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusBadRequest, resp.Code)
-		assert.JSONEq(t, `{"error":"name is mandatory"}`, resp.Body.String())
+		require.Equal(t, http.StatusBadRequest, resp.Code)
+		require.JSONEq(t, `{"error":"name is mandatory"}`, resp.Body.String())
 	})
 
 	t.Run("ServiceError", func(t *testing.T) {
@@ -219,8 +218,8 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusNotFound, resp.Code)
-		assert.JSONEq(t, `{"error":"some service error"}`, resp.Body.String())
+		require.Equal(t, http.StatusNotFound, resp.Code)
+		require.JSONEq(t, `{"error":"some service error"}`, resp.Body.String())
 	})
 }
 
@@ -243,8 +242,8 @@ func TestUserHandler_DeleteUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusOK, resp.Code)
-		assert.JSONEq(t, `{"message":"User deleted"}`, resp.Body.String())
+		require.Equal(t, http.StatusOK, resp.Code)
+		require.JSONEq(t, `{"message":"User deleted"}`, resp.Body.String())
 	})
 
 	t.Run("InvalidID", func(t *testing.T) {
@@ -255,8 +254,8 @@ func TestUserHandler_DeleteUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusBadRequest, resp.Code)
-		assert.JSONEq(t, `{"error":"Invalid ID"}`, resp.Body.String())
+		require.Equal(t, http.StatusBadRequest, resp.Code)
+		require.JSONEq(t, `{"error":"Invalid ID"}`, resp.Body.String())
 	})
 
 	t.Run("ServiceError", func(t *testing.T) {
@@ -269,8 +268,8 @@ func TestUserHandler_DeleteUser(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusNotFound, resp.Code)
-		assert.JSONEq(t, `{"error":"some service error"}`, resp.Body.String())
+		require.Equal(t, http.StatusNotFound, resp.Code)
+		require.JSONEq(t, `{"error":"some service error"}`, resp.Body.String())
 	})
 }
 
@@ -296,8 +295,8 @@ func TestUserHandler_GetAllUsers(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusOK, resp.Code)
-		assert.JSONEq(t, `[{"id":1,"name":"John Doe","email":"john@example.com","password":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"},{"id":2,"name":"Jane Doe","email":"jane@example.com","password":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}]`, resp.Body.String())
+		require.Equal(t, http.StatusOK, resp.Code)
+		require.JSONEq(t, `[{"id":1,"name":"John Doe","email":"john@example.com","password":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"},{"id":2,"name":"Jane Doe","email":"jane@example.com","password":"","created_at":"0001-01-01T00:00:00Z","updated_at":"0001-01-01T00:00:00Z"}]`, resp.Body.String())
 	})
 
 	t.Run("ServiceError", func(t *testing.T) {
@@ -310,7 +309,7 @@ func TestUserHandler_GetAllUsers(t *testing.T) {
 
 		router.ServeHTTP(resp, req)
 
-		assert.Equal(t, http.StatusBadRequest, resp.Code)
-		assert.JSONEq(t, `{"error":"some service error"}`, resp.Body.String())
+		require.Equal(t, http.StatusBadRequest, resp.Code)
+		require.JSONEq(t, `{"error":"some service error"}`, resp.Body.String())
 	})
 }

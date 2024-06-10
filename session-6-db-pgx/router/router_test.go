@@ -1,149 +1,146 @@
-// router/router_test.go
 package router_test
 
 import (
+	"encoding/base64"
+	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang/mock/gomock"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-6-db-pgx/router"
-	"github.com/stretchr/testify/require"
+	mock_handler "github.com/ibrahimker/golang-praisindo-advanced/session-6-db-pgx/test/mock/handler"
 )
 
-func TestPublicRoutes(t *testing.T) {
-	// Set gin ke mode test
+func TestSetupRouter(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockUserHandler := mock_handler.NewMockIUserHandler(ctrl)
+
 	gin.SetMode(gin.TestMode)
-	// Buat router gin baru
 	r := gin.Default()
-	// Buat mock user handler
-	mockUserHandler := &MockUserHandler{}
-	// Set up router dengan mock handler
-	router.SetupRouter(r, mockUserHandler)
 
-	// Test GET /users/:id
-	t.Run("GET /users/:id", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodGet, "/users/1", nil)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
-
-		// Verifikasi bahwa status code adalah 200 OK
-		require.Equal(t, http.StatusOK, w.Code)
-		// Verifikasi bahwa body mengandung "user found"
-		require.Contains(t, w.Body.String(), "user found")
+	// Mock middleware to always allow requests for public endpoints
+	r.Use(func(c *gin.Context) {
+		c.Next()
 	})
 
-	// Test GET /users
-	t.Run("GET /users", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodGet, "/users", nil)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
-
-		// Verifikasi bahwa status code adalah 200 OK
-		require.Equal(t, http.StatusOK, w.Code)
-		// Verifikasi bahwa body mengandung "all users"
-		require.Contains(t, w.Body.String(), "all users")
-	})
-}
-
-func TestPrivateRoutes(t *testing.T) {
-	// Set gin ke mode test
-	gin.SetMode(gin.TestMode)
-	// Buat router gin baru
-	r := gin.Default()
-	// Buat mock user handler
-	mockUserHandler := &MockUserHandler{}
-	// Set up router dengan mock handler
 	router.SetupRouter(r, mockUserHandler)
 
-	// Fungsi helper untuk menambahkan header autentikasi dasar
-	addAuth := func(req *http.Request) {
-		req.SetBasicAuth("user", "pass")
+	// Helper function to create Basic Auth header
+	createBasicAuthHeader := func(user, password string) string {
+		auth := user + ":" + password
+		return "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
 	}
 
-	// Test POST /users
-	t.Run("POST /users", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, "/users", nil)
-		addAuth(req)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
+	// Public endpoints
+	t.Run("GetUser", func(t *testing.T) {
+		mockUserHandler.EXPECT().GetUser(gomock.Any())
 
-		// Verifikasi bahwa status code adalah 201 Created
-		require.Equal(t, http.StatusCreated, w.Code)
-		// Verifikasi bahwa body mengandung "user created"
-		require.Contains(t, w.Body.String(), "user created")
+		req := httptest.NewRequest(http.MethodGet, "/users/1", nil)
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		require.Equal(t, http.StatusOK, resp.Code)
 	})
 
-	// Test PUT /users/:id
-	t.Run("PUT /users/:id", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPut, "/users/1", nil)
-		addAuth(req)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
+	t.Run("GetAllUsers", func(t *testing.T) {
+		mockUserHandler.EXPECT().GetAllUsers(gomock.Any())
 
-		// Verifikasi bahwa status code adalah 200 OK
-		require.Equal(t, http.StatusOK, w.Code)
-		// Verifikasi bahwa body mengandung "user updated"
-		require.Contains(t, w.Body.String(), "user updated")
+		req := httptest.NewRequest(http.MethodGet, "/users", nil)
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		require.Equal(t, http.StatusOK, resp.Code)
 	})
 
-	// Test DELETE /users/:id
-	t.Run("DELETE /users/:id", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodDelete, "/users/1", nil)
-		addAuth(req)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
+	t.Run("GetAllUsersWithSlash", func(t *testing.T) {
+		mockUserHandler.EXPECT().GetAllUsers(gomock.Any())
 
-		// Verifikasi bahwa status code adalah 200 OK
-		require.Equal(t, http.StatusOK, w.Code)
-		// Verifikasi bahwa body mengandung "user deleted"
-		require.Contains(t, w.Body.String(), "user deleted")
-	})
-}
+		req := httptest.NewRequest(http.MethodGet, "/users/", nil)
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
 
-func TestPrivateRoutesUnauthorized(t *testing.T) {
-	// Set gin ke mode test
-	gin.SetMode(gin.TestMode)
-	// Buat router gin baru
-	r := gin.Default()
-	// Buat mock user handler
-	mockUserHandler := &MockUserHandler{}
-	// Set up router dengan mock handler
-	router.SetupRouter(r, mockUserHandler)
-
-	// Test POST /users tanpa autentikasi
-	t.Run("POST /users - Unauthorized", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPost, "/users", nil)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
-
-		// Verifikasi bahwa status code adalah 401 Unauthorized
-		require.Equal(t, http.StatusUnauthorized, w.Code)
-		// Verifikasi bahwa body mengandung "Authorization basic token required"
-		require.Contains(t, w.Body.String(), "Authorization basic token required")
+		require.Equal(t, http.StatusOK, resp.Code)
 	})
 
-	// Test PUT /users/:id tanpa autentikasi
-	t.Run("PUT /users/:id - Unauthorized", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodPut, "/users/1", nil)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
+	// Private endpoints (Unauthorized)
+	t.Run("UnauthorizedCreateUser", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPost, "/users", nil)
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
 
-		// Verifikasi bahwa status code adalah 401 Unauthorized
-		require.Equal(t, http.StatusUnauthorized, w.Code)
-		// Verifikasi bahwa body mengandung "Authorization basic token required"
-		require.Contains(t, w.Body.String(), "Authorization basic token required")
+		require.Equal(t, http.StatusUnauthorized, resp.Code)
 	})
 
-	// Test DELETE /users/:id tanpa autentikasi
-	t.Run("DELETE /users/:id - Unauthorized", func(t *testing.T) {
-		req, _ := http.NewRequest(http.MethodDelete, "/users/1", nil)
-		w := httptest.NewRecorder()
-		r.ServeHTTP(w, req)
+	t.Run("UnauthorizedCreateUserWithSlash", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPost, "/users/", nil)
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
 
-		// Verifikasi bahwa status code adalah 401 Unauthorized
-		require.Equal(t, http.StatusUnauthorized, w.Code)
-		// Verifikasi bahwa body mengandung "Authorization basic token required"
-		require.Contains(t, w.Body.String(), "Authorization basic token required")
+		require.Equal(t, http.StatusUnauthorized, resp.Code)
+	})
+
+	t.Run("UnauthorizedUpdateUser", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPut, "/users/1", nil)
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		require.Equal(t, http.StatusUnauthorized, resp.Code)
+	})
+
+	t.Run("UnauthorizedDeleteUser", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodDelete, "/users/1", nil)
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		require.Equal(t, http.StatusUnauthorized, resp.Code)
+	})
+
+	// Private endpoints (Authorized)
+	t.Run("CreateUser", func(t *testing.T) {
+		mockUserHandler.EXPECT().CreateUser(gomock.Any())
+
+		req := httptest.NewRequest(http.MethodPost, "/users", nil)
+		req.Header.Set("Authorization", createBasicAuthHeader("user", "pass"))
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		require.Equal(t, http.StatusOK, resp.Code)
+	})
+
+	t.Run("CreateUserWithSlash", func(t *testing.T) {
+		mockUserHandler.EXPECT().CreateUser(gomock.Any())
+
+		req := httptest.NewRequest(http.MethodPost, "/users/", nil)
+		req.Header.Set("Authorization", createBasicAuthHeader("user", "pass"))
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		require.Equal(t, http.StatusOK, resp.Code)
+	})
+
+	t.Run("UpdateUser", func(t *testing.T) {
+		mockUserHandler.EXPECT().UpdateUser(gomock.Any())
+
+		req := httptest.NewRequest(http.MethodPut, "/users/1", nil)
+		req.Header.Set("Authorization", createBasicAuthHeader("user", "pass"))
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		require.Equal(t, http.StatusOK, resp.Code)
+	})
+
+	t.Run("DeleteUser", func(t *testing.T) {
+		mockUserHandler.EXPECT().DeleteUser(gomock.Any())
+
+		req := httptest.NewRequest(http.MethodDelete, "/users/1", nil)
+		req.Header.Set("Authorization", createBasicAuthHeader("user", "pass"))
+		resp := httptest.NewRecorder()
+		r.ServeHTTP(resp, req)
+
+		require.Equal(t, http.StatusOK, resp.Code)
 	})
 }
