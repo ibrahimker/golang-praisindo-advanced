@@ -43,6 +43,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 	createdUser, err := h.userService.CreateUser(c.Request.Context(), &user)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 	c.JSON(http.StatusCreated, createdUser)
 }
@@ -110,6 +111,7 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 	users, err := h.userService.GetAllUsers(c.Request.Context())
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 	c.JSON(http.StatusOK, users)
 }
