@@ -3,10 +3,8 @@ package main
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-6-db-pgx/entity"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-6-db-pgx/handler"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-6-db-pgx/repository/postgres_pgx"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-6-db-pgx/repository/slice"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-6-db-pgx/router"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-6-db-pgx/service"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -22,9 +20,13 @@ func main() {
 		log.Fatalln(err)
 	}
 	// setup service
-	var mockUserDBInSlice []entity.User
-	userRepo := slice.NewUserRepository(mockUserDBInSlice)
-	_ = postgres_pgx.NewUserRepository(pgxPool)
+
+	// slice db is disabled. uncomment to enabled
+	// var mockUserDBInSlice []entity.User
+	// _ = slice.NewUserRepository(mockUserDBInSlice)
+
+	// pgx db is enabled. comment to disabled
+	userRepo := postgres_pgx.NewUserRepository(pgxPool)
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 

@@ -40,7 +40,10 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	createdUser := h.userService.CreateUser(&user)
+	createdUser, err := h.userService.CreateUser(c.Request.Context(), &user)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
 	c.JSON(http.StatusCreated, createdUser)
 }
 
@@ -52,7 +55,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	user, err := h.userService.GetUserByID(id)
+	user, err := h.userService.GetUserByID(c.Request.Context(), id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
@@ -77,7 +80,7 @@ func (h *UserHandler) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	updatedUser, err := h.userService.UpdateUser(id, user)
+	updatedUser, err := h.userService.UpdateUser(c.Request.Context(), id, user)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
@@ -94,7 +97,7 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	if err := h.userService.DeleteUser(id); err != nil {
+	if err := h.userService.DeleteUser(c.Request.Context(), id); err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
@@ -104,7 +107,10 @@ func (h *UserHandler) DeleteUser(c *gin.Context) {
 
 // GetAllUsers menghandle permintaan untuk mendapatkan semua user
 func (h *UserHandler) GetAllUsers(c *gin.Context) {
-	users := h.userService.GetAllUsers()
+	users, err := h.userService.GetAllUsers(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
 	c.JSON(http.StatusOK, users)
 }
 
