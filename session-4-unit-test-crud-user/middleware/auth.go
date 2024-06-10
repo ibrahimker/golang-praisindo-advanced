@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-4-unit-test-crud-user/config"
 	"net/http"
 )
 
@@ -16,11 +17,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		const (
-			expectedUsername = "user"
-			expectedPassword = "pass"
-		)
-		isValid := (username == expectedUsername) && (password == expectedPassword)
+		isValid := (username == config.AuthBasicUsername) && (password == config.AuthBasicPassword)
 		if !isValid {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization token"})
 			c.Abort()
