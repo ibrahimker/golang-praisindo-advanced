@@ -65,7 +65,7 @@ func TestCreateUserHandler(t *testing.T) {
 		require.Equal(t, user.Email, createdUser.Email)
 	})
 
-	t.Run("Negative Test Case", func(t *testing.T) {
+	t.Run("Negative Test Case - invalid json", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 
 		mockUserService := &MockUserService{}
@@ -82,6 +82,34 @@ func TestCreateUserHandler(t *testing.T) {
 		r.ServeHTTP(w, req)
 
 		require.Equal(t, http.StatusBadRequest, w.Code)
+		var customError struct{ Error string }
+		_ = json.Unmarshal(w.Body.Bytes(), &customError)
+		require.Equal(t, "invalid character 'i' looking for beginning of value", customError.Error)
+	})
+
+	t.Run("Negative Test Case - empty email", func(t *testing.T) {
+		gin.SetMode(gin.TestMode)
+
+		mockUserService := &MockUserService{}
+		userHandler := handler.NewUserHandler(mockUserService)
+
+		r := gin.Default()
+		r.POST("/users", userHandler.CreateUser)
+
+		user := entity.User{Name: "Test User", Email: "", Password: "testpass"}
+		jsonUser, _ := json.Marshal(user)
+
+		req, _ := http.NewRequest("POST", "/users", bytes.NewBuffer(jsonUser))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		require.Equal(t, http.StatusBadRequest, w.Code)
+
+		var customError struct{ Error string }
+		_ = json.Unmarshal(w.Body.Bytes(), &customError)
+		require.Equal(t, "email is mandatory", customError.Error)
 	})
 }
 
@@ -209,6 +237,31 @@ func TestUpdateUserHandler(t *testing.T) {
 		require.Equal(t, http.StatusBadRequest, w.Code)
 	})
 
+	t.Run("Negative Test Case - name is empty", func(t *testing.T) {
+		gin.SetMode(gin.TestMode)
+
+		mockUserService := &MockUserService{}
+		userHandler := handler.NewUserHandler(mockUserService)
+
+		r := gin.Default()
+		r.PUT("/users/:id", userHandler.UpdateUser)
+
+		invalidUser := entity.User{ID: 100, Name: "", Email: "updated@example.com", Password: "updatedpass"} // User with ID 100 doesn't exist
+		jsonUser, _ := json.Marshal(invalidUser)
+
+		req, _ := http.NewRequest("PUT", "/users/100", bytes.NewBuffer(jsonUser))
+		req.Header.Set("Content-Type", "application/json")
+
+		w := httptest.NewRecorder()
+		r.ServeHTTP(w, req)
+
+		require.Equal(t, http.StatusBadRequest, w.Code)
+
+		var customError struct{ Error string }
+		_ = json.Unmarshal(w.Body.Bytes(), &customError)
+		require.Equal(t, "name is mandatory", customError.Error)
+	})
+
 	t.Run("Negative Test Case - not found", func(t *testing.T) {
 		gin.SetMode(gin.TestMode)
 
@@ -218,7 +271,7 @@ func TestUpdateUserHandler(t *testing.T) {
 		r := gin.Default()
 		r.PUT("/users/:id", userHandler.UpdateUser)
 
-		invalidUser := entity.User{ID: 100, Name: "Invalid User"} // User with ID 100 doesn't exist
+		invalidUser := entity.User{ID: 100, Name: "Updated User", Email: "updated@example.com", Password: "updatedpass"} // User with ID 100 doesn't exist
 		jsonUser, _ := json.Marshal(invalidUser)
 
 		req, _ := http.NewRequest("PUT", "/users/100", bytes.NewBuffer(jsonUser))
