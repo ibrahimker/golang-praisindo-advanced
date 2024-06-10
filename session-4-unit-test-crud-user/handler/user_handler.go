@@ -9,12 +9,23 @@ import (
 	"github.com/ibrahimker/golang-praisindo-advanced/session-4-unit-test-crud-user/service"
 )
 
+// IUserHandler mendefinisikan interface untuk handler user
+type IUserHandler interface {
+	CreateUser(c *gin.Context)
+	GetUser(c *gin.Context)
+	UpdateUser(c *gin.Context)
+	DeleteUser(c *gin.Context)
+	GetAllUsers(c *gin.Context)
+}
+
 type UserHandler struct {
 	userService service.IUserService
 }
 
-func NewUserHandler(userService service.IUserService) *UserHandler {
-	return &UserHandler{userService: userService}
+func NewUserHandler(userService service.IUserService) IUserHandler {
+	return &UserHandler{
+		userService: userService,
+	}
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
