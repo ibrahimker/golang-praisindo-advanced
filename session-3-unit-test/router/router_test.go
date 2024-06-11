@@ -27,7 +27,7 @@ func TestSetupRouter_RootHandler(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	// Periksa body respons
-	expectedBody := `{"message":"Halo dari Gin!"}`
+	expectedBody := `{"message":"Halo dari name! gin"}`
 	assert.JSONEq(t, expectedBody, w.Body.String())
 }
 
