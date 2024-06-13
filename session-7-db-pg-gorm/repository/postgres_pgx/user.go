@@ -34,7 +34,7 @@ func (r *userRepository) CreateUser(ctx context.Context, user *entity.User) (ent
 		log.Printf("Error creating user: %v\n", err)
 		return entity.User{}, err
 	}
-	user.ID = uint(id)
+	user.ID = id
 	return *user, nil
 }
 

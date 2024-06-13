@@ -9,7 +9,7 @@ import (
 
 // GormDBIface defines an interface for GORM DB methods used in the repository
 type GormDBIface interface {
-	WithContext(ctx context.Context) *gorm.DB
+	WithContext(ctx context.Context) GormDBIface
 	Create(value interface{}) *gorm.DB
 	First(dest interface{}, conds ...interface{}) *gorm.DB
 	Save(value interface{}) *gorm.DB
