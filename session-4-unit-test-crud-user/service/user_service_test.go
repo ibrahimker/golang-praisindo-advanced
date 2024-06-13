@@ -3,12 +3,13 @@ package service_test
 import (
 	"github.com/ibrahimker/golang-praisindo-advanced/session-4-unit-test-crud-user/entity"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-4-unit-test-crud-user/service"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-4-unit-test-crud-user/test/mock/repository"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestCreateUser(t *testing.T) {
-	mockRepo := &MockUserRepository{}
+	mockRepo := &repository.MockUserRepository{}
 	userService := service.NewUserService(mockRepo)
 
 	t.Run("CreateUser - Success", func(t *testing.T) {
@@ -23,7 +24,7 @@ func TestCreateUser(t *testing.T) {
 }
 
 func TestGetUserByID(t *testing.T) {
-	mockRepo := &MockUserRepository{}
+	mockRepo := &repository.MockUserRepository{}
 	userService := service.NewUserService(mockRepo)
 
 	user := &entity.User{Name: "Test", Email: "test@example.com", Password: "password"}
@@ -44,7 +45,7 @@ func TestGetUserByID(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
-	mockRepo := &MockUserRepository{}
+	mockRepo := &repository.MockUserRepository{}
 	userService := service.NewUserService(mockRepo)
 
 	user := &entity.User{Name: "Test", Email: "test@example.com", Password: "password"}
@@ -69,7 +70,7 @@ func TestUpdateUser(t *testing.T) {
 }
 
 func TestDeleteUser(t *testing.T) {
-	mockRepo := &MockUserRepository{}
+	mockRepo := &repository.MockUserRepository{}
 	userService := service.NewUserService(mockRepo)
 
 	user := &entity.User{Name: "Test", Email: "test@example.com", Password: "password"}
@@ -88,7 +89,7 @@ func TestDeleteUser(t *testing.T) {
 }
 
 func TestGetAllUsers(t *testing.T) {
-	mockRepo := &MockUserRepository{}
+	mockRepo := &repository.MockUserRepository{}
 	userService := service.NewUserService(mockRepo)
 
 	user1 := &entity.User{Name: "Test1", Email: "test1@example.com", Password: "password"}
