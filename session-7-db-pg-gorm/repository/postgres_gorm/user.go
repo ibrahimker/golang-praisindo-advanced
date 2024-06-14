@@ -2,6 +2,7 @@ package postgres_gorm
 
 import (
 	"context"
+	"errors"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/entity"
 	"gorm.io/gorm"
 	"log"
@@ -9,7 +10,7 @@ import (
 
 // GormDBIface defines an interface for GORM DB methods used in the repository
 type GormDBIface interface {
-	WithContext(ctx context.Context) GormDBIface
+	WithContext(ctx context.Context) *gorm.DB
 	Create(value interface{}) *gorm.DB
 	First(dest interface{}, conds ...interface{}) *gorm.DB
 	Save(value interface{}) *gorm.DB
@@ -39,6 +40,9 @@ func (r *userRepository) CreateUser(ctx context.Context, user *entity.User) (ent
 func (r *userRepository) GetUserByID(ctx context.Context, id int) (entity.User, error) {
 	var user entity.User
 	if err := r.db.WithContext(ctx).First(&user, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entity.User{}, nil
+		}
 		log.Printf("Error getting user by ID: %v\n", err)
 		return entity.User{}, err
 	}
@@ -77,6 +81,9 @@ func (r *userRepository) DeleteUser(ctx context.Context, id int) error {
 func (r *userRepository) GetAllUsers(ctx context.Context) ([]entity.User, error) {
 	var users []entity.User
 	if err := r.db.WithContext(ctx).Find(&users).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return users, nil
+		}
 		log.Printf("Error getting all users: %v\n", err)
 		return nil, err
 	}
