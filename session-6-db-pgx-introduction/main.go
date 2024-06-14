@@ -28,7 +28,7 @@ func main() {
 	ctx := context.Background()
 	err = pool.QueryRow(ctx, "select id,name from users order by id desc limit 1").Scan(&u.ID, &u.Name)
 	if err != nil {
-		log.Fatalln(err)
+		log.Println(err)
 	}
 	fmt.Println("user retrieved", u)
 
@@ -46,7 +46,7 @@ func main() {
 		var u2 entity.User
 		rows.Scan(&u2.ID, &u2.Name)
 		if err != nil {
-			log.Fatalln(err)
+			log.Println(err)
 		}
 		users = append(users, u2)
 	}
