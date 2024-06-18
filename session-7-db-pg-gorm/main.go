@@ -19,7 +19,7 @@ func main() {
 	r := gin.Default()
 
 	// setup database connection
-	dsn := "postgresql://postgres:postgres@localhost:5432/postgres"
+	//dsn := "postgresql://postgres:postgres@localhost:5432/postgres"
 	// setup pgx connection
 	//pgxPool, err := connectDB(dsn)
 	//if err != nil {
@@ -27,6 +27,7 @@ func main() {
 	//}
 
 	// setup gorm connectoin
+	dsn := "postgresql://postgres:postgres@localhost:5432/postgres"
 	gormDB, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalln(err)

@@ -3,243 +3,276 @@ package postgres_gorm_test
 import (
 	"context"
 	"errors"
-	"github.com/golang/mock/gomock"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/entity"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/repository/postgres_gorm"
-	mock_postgres_gorm "github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/test/mock/repository"
 	"github.com/stretchr/testify/require"
-	"gorm.io/gorm"
+	"regexp"
 	"testing"
 	"time"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+
+	"github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/entity"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/repository/postgres_gorm"
 )
 
+func setupSQLMock(t *testing.T) (sqlmock.Sqlmock, *gorm.DB) {
+	// Setup SQL mock
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
+	}
+
+	// Setup GORM with the mock DB
+	gormDB, gormDBErr := gorm.Open(postgres.New(postgres.Config{
+		Conn: db,
+	}), &gorm.Config{})
+	if gormDBErr != nil {
+		t.Fatalf("failed to open GORM connection: %v", gormDBErr)
+	}
+	return mock, gormDB
+}
+
 func TestUserRepository_CreateUser(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	// Setup SQL mock
+	mock, gormDB := setupSQLMock(t)
 
-	mockDB := mock_postgres_gorm.NewMockGormDBIface(ctrl)
-	repo := postgres_gorm.NewUserRepository(mockDB)
+	// Initialize userRepository with mocked GORM connection
+	userRepo := postgres_gorm.NewUserRepository(gormDB)
 
-	t.Run("Positive", func(t *testing.T) {
+	expectedQueryString := regexp.QuoteMeta(`INSERT INTO "users" ("name","email","password","created_at","updated_at") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`)
+
+	t.Run("Positive Case", func(t *testing.T) {
+		// Expected user data to insert
 		user := &entity.User{
-			Name:     "John Doe",
-			Email:    "john@example.com",
-			Password: "secret",
+			Name:      "John Doe",
+			Email:     "john.doe@example.com",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		}
 
-		mockDB.EXPECT().WithContext(gomock.Any()).Return(mockDB)
+		// Set mock expectations for the transaction
+		mock.ExpectBegin()
+		mock.ExpectQuery(expectedQueryString).
+			WillReturnRows(sqlmock.NewRows([]string{"id"}).
+				AddRow(1)) // Mock the result of the INSERT operation
+		mock.ExpectCommit()
 
-		mockDB.EXPECT().
-			Create(user).
-			Return(&gorm.DB{Error: nil})
+		// Call the CreateUser method
+		createdUser, err := userRepo.CreateUser(context.Background(), user)
 
-		createdUser, err := repo.CreateUser(context.Background(), user)
+		// Assert the result
 		require.NoError(t, err)
 		require.NotNil(t, createdUser.ID)
-		require.Equal(t, "John Doe", createdUser.Name)
+		require.Equal(t, user.Name, createdUser.Name)
+		require.Equal(t, user.Email, createdUser.Email)
 	})
 
-	t.Run("Negative", func(t *testing.T) {
+	t.Run("Negative Case", func(t *testing.T) {
+		// Expected user data to insert
 		user := &entity.User{
-			Name:     "John Doe",
-			Email:    "john@example.com",
-			Password: "secret",
+			Name:      "John Doe",
+			Email:     "john.doe@example.com",
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
 		}
 
-		mockDB.EXPECT().
-			WithContext(gomock.Any()).
-			Return(mockDB)
+		// Set mock expectations for the transaction
+		mock.ExpectBegin()
+		mock.ExpectQuery(expectedQueryString).
+			WillReturnError(errors.New("db error"))
+		mock.ExpectRollback()
 
-		mockDB.EXPECT().
-			Create(user).
-			Return(&gorm.DB{Error: errors.New("database error")})
+		// Call the CreateUser method
+		createdUser, err := userRepo.CreateUser(context.Background(), user)
 
-		_, err := repo.CreateUser(context.Background(), user)
+		// Assert the result
 		require.Error(t, err)
-		require.EqualError(t, err, "database error")
+		require.Empty(t, createdUser)
 	})
 }
 
 func TestUserRepository_GetUserByID(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	// Setup SQL mock
+	mock, gormDB := setupSQLMock(t)
+	userRepo := postgres_gorm.NewUserRepository(gormDB)
 
-	mockDB := mock_postgres_gorm.NewMockGormDBIface(ctrl)
-	repo := postgres_gorm.NewUserRepository(mockDB)
+	expectedQueryString := regexp.QuoteMeta(`SELECT * FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" LIMIT $2`)
 
-	t.Run("Positive", func(t *testing.T) {
-		// Prepare expected user
-		expectedUser := entity.User{
-			ID:        1,
-			Name:      "John Doe",
-			Email:     "john@example.com",
-			Password:  "secret",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		// Expect a call to First method on mock with expectedUser.ID as argument
-		mockDB.EXPECT().WithContext(gomock.Any()).Return(mockDB)
-		mockDB.EXPECT().First(gomock.Any(), expectedUser.ID).SetArg(0, expectedUser).Return(&gorm.DB{Error: nil}).Times(1)
+	t.Run("Positive Case", func(t *testing.T) {
+		mock.ExpectQuery(expectedQueryString).
+			WithArgs(1, 1).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John Doe", "john.doe@example.com"))
 
-		user, err := repo.GetUserByID(context.Background(), expectedUser.ID)
+		user, err := userRepo.GetUserByID(context.Background(), 1)
 		require.NoError(t, err)
-		require.Equal(t, expectedUser.ID, user.ID)
-		require.Equal(t, expectedUser.Name, user.Name)
-		// Ensure other fields are correctly set
+		require.Equal(t, "John Doe", user.Name)
+		require.Equal(t, "john.doe@example.com", user.Email)
 	})
 
-	t.Run("Negative", func(t *testing.T) {
-		nonExistentUserID := 999
-		// Expect a call to First method on mock and return an error (record not found)
-		mockDB.EXPECT().WithContext(gomock.Any()).Return(mockDB)
-		mockDB.EXPECT().First(gomock.Any(), nonExistentUserID).Return(&gorm.DB{Error: gorm.ErrRecordNotFound}).Times(1)
+	t.Run("No data found Case", func(t *testing.T) {
+		mock.ExpectQuery(expectedQueryString).
+			WithArgs(1, 1).
+			WillReturnError(gorm.ErrRecordNotFound)
 
-		_, err := repo.GetUserByID(context.Background(), nonExistentUserID)
+		user, err := userRepo.GetUserByID(context.Background(), 1)
+		require.NoError(t, err)
+		require.Empty(t, user)
+	})
+
+	t.Run("Negative Case", func(t *testing.T) {
+		mock.ExpectQuery(expectedQueryString).
+			WithArgs(1, 1).
+			WillReturnError(errors.New("db down"))
+
+		user, err := userRepo.GetUserByID(context.Background(), 1)
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "record not found")
+		require.Empty(t, user)
 	})
 }
 
 func TestUserRepository_UpdateUser(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	// Setup SQL mock
+	mock, gormDB := setupSQLMock(t)
+	userRepo := postgres_gorm.NewUserRepository(gormDB)
 
-	mockDB := mock_postgres_gorm.NewMockGormDBIface(ctrl)
-	repo := postgres_gorm.NewUserRepository(mockDB)
+	expectedSelectQueryString := regexp.QuoteMeta(`SELECT * FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" LIMIT $2`)
 
-	t.Run("Positive", func(t *testing.T) {
-		userID := 1
+	expectedUpdateQueryString := regexp.QuoteMeta(`UPDATE "users" SET "name"=$1,"email"=$2,"password"=$3,"created_at"=$4,"updated_at"=$5 WHERE "id" = $6`)
+
+	t.Run("Positive Case - select and update success", func(t *testing.T) {
+		mock.ExpectQuery(expectedSelectQueryString).
+			WithArgs(1, 1).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John Doe", "john.doe@example.com"))
+
+		mock.ExpectBegin()
+		mock.ExpectExec(expectedUpdateQueryString).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit()
+
 		user := entity.User{
-			ID:        userID,
-			Name:      "John Doe",
-			Email:     "john@example.com",
-			Password:  "newpassword",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
+			ID:    1,
+			Name:  "Updated Name",
+			Email: "updated.email@example.com",
 		}
-		// Expect a call to First method on mock with userID as argument
-		mockDB.EXPECT().WithContext(gomock.Any()).Return(mockDB)
-		mockDB.EXPECT().First(gomock.Any(), userID).SetArg(0, user).Return(&gorm.DB{Error: nil}).Times(1)
-		// Expect a call to Save method on mock with updatedUser as argument
-		mockDB.EXPECT().WithContext(gomock.Any()).Return(mockDB)
-		mockDB.EXPECT().Save(&user).Return(&gorm.DB{}).Times(1)
 
-		updatedUser, err := repo.UpdateUser(context.Background(), userID, user)
+		updatedUser, err := userRepo.UpdateUser(context.Background(), user.ID, user)
 		require.NoError(t, err)
-		require.Equal(t, user.ID, updatedUser.ID)
 		require.Equal(t, user.Name, updatedUser.Name)
-		// Ensure other fields are correctly set
+		require.Equal(t, user.Email, updatedUser.Email)
 	})
 
-	t.Run("Success on first but error on save", func(t *testing.T) {
-		userID := 1
-		user := entity.User{
-			ID:        userID,
-			Name:      "John Doe",
-			Email:     "john@example.com",
-			Password:  "newpassword",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		// Expect a call to First method on mock with userID as argument
-		mockDB.EXPECT().WithContext(gomock.Any()).Return(mockDB)
-		mockDB.EXPECT().First(gomock.Any(), userID).SetArg(0, user).Return(&gorm.DB{Error: nil}).Times(1)
-		// Expect a call to Save method on mock with updatedUser as argument
-		mockDB.EXPECT().WithContext(gomock.Any()).Return(mockDB)
-		mockDB.EXPECT().Save(&user).Return(&gorm.DB{Error: errors.New("db error")}).Times(1)
+	t.Run("Negative Case - error on selecting rows", func(t *testing.T) {
+		mock.ExpectQuery(expectedSelectQueryString).
+			WithArgs(1, 1).
+			WillReturnError(errors.New("database down"))
 
-		updatedUser, err := repo.UpdateUser(context.Background(), userID, user)
+		user := entity.User{
+			ID:    1,
+			Name:  "Updated Name",
+			Email: "updated.email@example.com",
+		}
+
+		updatedUser, err := userRepo.UpdateUser(context.Background(), user.ID, user)
+
 		require.Error(t, err)
 		require.Empty(t, updatedUser)
-		// Ensure other fields are correctly set
 	})
 
-	t.Run("Negative", func(t *testing.T) {
-		userID := 1
-		user := entity.User{
-			ID:        userID,
-			Name:      "John Doe",
-			Email:     "john@example.com",
-			Password:  "newpassword",
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		}
-		// Expect a call to First method on mock with userID as argument and return error
-		mockDB.EXPECT().WithContext(gomock.Any()).Return(mockDB)
-		mockDB.EXPECT().First(gomock.Any(), userID).Return(&gorm.DB{Error: gorm.ErrRecordNotFound}).Times(1)
+	t.Run("Negative Case - error on updating rows", func(t *testing.T) {
+		mock.ExpectQuery(expectedSelectQueryString).
+			WithArgs(1, 1).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John Doe", "john.doe@example.com"))
 
-		_, err := repo.UpdateUser(context.Background(), userID, user)
+		mock.ExpectBegin()
+		mock.ExpectExec(expectedUpdateQueryString).
+			WillReturnError(errors.New("db error"))
+		mock.ExpectRollback()
+
+		user := entity.User{
+			ID:    1,
+			Name:  "Updated Name",
+			Email: "updated.email@example.com",
+		}
+
+		updatedUser, err := userRepo.UpdateUser(context.Background(), user.ID, user)
+
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "record not found")
+		require.Empty(t, updatedUser)
 	})
 }
 
 func TestUserRepository_DeleteUser(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	// Setup SQL mock
+	mock, gormDB := setupSQLMock(t)
+	userRepo := postgres_gorm.NewUserRepository(gormDB)
 
-	mockDB := mock_postgres_gorm.NewMockGormDBIface(ctrl)
-	repo := postgres_gorm.NewUserRepository(mockDB)
+	expectedQueryString := regexp.QuoteMeta(`DELETE FROM "users" WHERE "users"."id" = $1`)
 
-	t.Run("Positive", func(t *testing.T) {
-		userID := 1
-		// Expect a call to Delete method on mock with userID as argument
-		mockDB.EXPECT().WithContext(gomock.Any()).Return(mockDB)
-		mockDB.EXPECT().Delete(&entity.User{}, userID).Return(&gorm.DB{}).Times(1)
+	t.Run("Positive Case", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectExec(expectedQueryString).
+			WithArgs(1).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+		mock.ExpectCommit()
 
-		err := repo.DeleteUser(context.Background(), userID)
+		err := userRepo.DeleteUser(context.Background(), 1)
 		require.NoError(t, err)
 	})
 
-	t.Run("Negative", func(t *testing.T) {
-		userID := 1
-		// Expect a call to Delete method on mock with userID as argument and return error
-		mockDB.EXPECT().WithContext(gomock.Any()).Return(mockDB)
-		mockDB.EXPECT().Delete(&entity.User{}, userID).Return(&gorm.DB{Error: gorm.ErrRecordNotFound}).Times(1)
+	t.Run("Negative Case", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectExec(expectedQueryString).
+			WithArgs(1).
+			WillReturnError(errors.New("db error"))
+		mock.ExpectRollback()
 
-		err := repo.DeleteUser(context.Background(), userID)
+		err := userRepo.DeleteUser(context.Background(), 1)
+
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "record not found")
 	})
 }
 
 func TestUserRepository_GetAllUsers(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+	// Setup SQL mock
+	mock, gormDB := setupSQLMock(t)
+	userRepo := postgres_gorm.NewUserRepository(gormDB)
 
-	mockDB := mock_postgres_gorm.NewMockGormDBIface(ctrl)
-	repo := postgres_gorm.NewUserRepository(mockDB)
+	expectedQueryString := regexp.QuoteMeta(`SELECT * FROM "users"`)
 
-	t.Run("Positive", func(t *testing.T) {
-		// Prepare expected users
-		expectedUsers := []entity.User{
-			{ID: 1, Name: "John Doe", Email: "john@example.com"},
-			{ID: 2, Name: "Jane Doe", Email: "jane@example.com"},
-		}
-		// Expect a call to Find method on mock and return expectedUsers
-		mockDB.EXPECT().WithContext(gomock.Any()).Return(mockDB)
-		mockDB.EXPECT().Find(gomock.Any(), gomock.Any()).SetArg(0, expectedUsers).Return(&gorm.DB{Error: nil}).Times(1)
+	t.Run("Positive Case", func(t *testing.T) {
+		mock.ExpectQuery(expectedQueryString).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
+				AddRow(1, "John Doe", "john.doe@example.com").
+				AddRow(2, "Jane Doe", "jane.doe@example.com"))
 
-		users, err := repo.GetAllUsers(context.Background())
+		users, err := userRepo.GetAllUsers(context.Background())
 		require.NoError(t, err)
-		require.NotNil(t, users)
-		require.Len(t, users, len(expectedUsers))
-		// Ensure each user matches the expected user
-		for i, u := range users {
-			require.Equal(t, expectedUsers[i].ID, u.ID)
-			require.Equal(t, expectedUsers[i].Name, u.Name)
-			require.Equal(t, expectedUsers[i].Email, u.Email)
-			// Ensure other fields are correctly set
-		}
+		require.Len(t, users, 2)
+		require.Equal(t, "John Doe", users[0].Name)
+		require.Equal(t, "john.doe@example.com", users[0].Email)
+		require.Equal(t, "Jane Doe", users[1].Name)
+		require.Equal(t, "jane.doe@example.com", users[1].Email)
 	})
 
-	t.Run("Negative", func(t *testing.T) {
-		// Expect a call to Find method on mock and return error
-		mockDB.EXPECT().WithContext(gomock.Any()).Return(mockDB)
-		mockDB.EXPECT().Find(gomock.Any(), gomock.Any()).Return(&gorm.DB{Error: gorm.ErrRecordNotFound}).Times(1)
+	t.Run("No data found Case", func(t *testing.T) {
+		mock.ExpectQuery(expectedQueryString).
+			WillReturnError(gorm.ErrRecordNotFound)
 
-		_, err := repo.GetAllUsers(context.Background())
+		users, err := userRepo.GetAllUsers(context.Background())
+		require.NoError(t, err)
+		require.Empty(t, users)
+	})
+
+	t.Run("Negative Case", func(t *testing.T) {
+		mock.ExpectQuery(expectedQueryString).
+			WillReturnError(errors.New("error db"))
+
+		users, err := userRepo.GetAllUsers(context.Background())
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "record not found")
+		require.Empty(t, users)
 	})
 }
