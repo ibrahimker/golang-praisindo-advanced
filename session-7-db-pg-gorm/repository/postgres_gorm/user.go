@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/entity"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/service"
 	"gorm.io/gorm"
 	"log"
 )
@@ -23,7 +24,7 @@ type userRepository struct {
 }
 
 // NewUserRepository membuat instance baru dari userRepository
-func NewUserRepository(db GormDBIface) *userRepository {
+func NewUserRepository(db GormDBIface) service.IUserRepository {
 	return &userRepository{db: db}
 }
 
