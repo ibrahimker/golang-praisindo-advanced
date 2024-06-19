@@ -1,4 +1,4 @@
-package postgres_gorm
+package postgres_gorm_raw
 
 import (
 	"context"
@@ -30,17 +30,22 @@ func NewUserRepository(db GormDBIface) service.IUserRepository {
 
 // CreateUser membuat pengguna baru dalam basis data
 func (r *userRepository) CreateUser(ctx context.Context, user *entity.User) (entity.User, error) {
-	if err := r.db.WithContext(ctx).Create(user).Error; err != nil {
+	query := "INSERT INTO users (name, email, password, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id"
+	var createdID int
+	if err := r.db.WithContext(ctx).
+		Raw(query, user.Name, user.Email, user.Password).Scan(&createdID).Error; err != nil {
 		log.Printf("Error creating user: %v\n", err)
 		return entity.User{}, err
 	}
+	user.ID = createdID
 	return *user, nil
 }
 
 // GetUserByID mengambil pengguna berdasarkan ID
 func (r *userRepository) GetUserByID(ctx context.Context, id int) (entity.User, error) {
 	var user entity.User
-	if err := r.db.WithContext(ctx).Select("id", "name", "email", "password", "created_at", "updated_at").First(&user, id).Error; err != nil {
+	query := "SELECT id, name, email, password, created_at, updated_at FROM users WHERE id = $1"
+	if err := r.db.WithContext(ctx).Raw(query, id).Scan(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return entity.User{}, nil
 		}
@@ -52,26 +57,19 @@ func (r *userRepository) GetUserByID(ctx context.Context, id int) (entity.User, 
 
 // UpdateUser memperbarui informasi pengguna dalam basis data
 func (r *userRepository) UpdateUser(ctx context.Context, id int, user entity.User) (entity.User, error) {
-	// Menemukan pengguna yang akan diperbarui
-	var existingUser entity.User
-	if err := r.db.WithContext(ctx).Select("id", "name", "email", "password", "created_at", "updated_at").First(&existingUser, id).Error; err != nil {
-		log.Printf("Error finding user to update: %v\n", err)
-		return entity.User{}, err
-	}
-
+	query := "UPDATE users SET name = $1, email = $2, updated_at = NOW() WHERE id = $3"
 	// Memperbarui informasi pengguna
-	existingUser.Name = user.Name
-	existingUser.Email = user.Email
-	if err := r.db.WithContext(ctx).Save(&existingUser).Error; err != nil {
+	if err := r.db.WithContext(ctx).Exec(query, user.Name, user.Email, id).Error; err != nil {
 		log.Printf("Error updating user: %v\n", err)
 		return entity.User{}, err
 	}
-	return existingUser, nil
+	return user, nil
 }
 
 // DeleteUser menghapus pengguna berdasarkan ID
 func (r *userRepository) DeleteUser(ctx context.Context, id int) error {
-	if err := r.db.WithContext(ctx).Delete(&entity.User{}, id).Error; err != nil {
+	query := "DELETE FROM users WHERE id = $1"
+	if err := r.db.WithContext(ctx).Exec(query, id).Error; err != nil {
 		log.Printf("Error deleting user: %v\n", err)
 		return err
 	}
@@ -80,8 +78,9 @@ func (r *userRepository) DeleteUser(ctx context.Context, id int) error {
 
 // GetAllUsers mengambil semua pengguna dari basis data
 func (r *userRepository) GetAllUsers(ctx context.Context) ([]entity.User, error) {
+	query := "SELECT id, name, email, password, created_at, updated_at FROM users"
 	var users []entity.User
-	if err := r.db.WithContext(ctx).Select("id", "name", "email", "password", "created_at", "updated_at").Find(&users).Error; err != nil {
+	if err := r.db.WithContext(ctx).Raw(query).Scan(&users).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return users, nil
 		}

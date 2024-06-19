@@ -3,6 +3,7 @@ package postgres_pgx
 import (
 	"context"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/entity"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/service"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"log"
@@ -22,7 +23,7 @@ type userRepository struct {
 	db PgxPoolIface
 }
 
-func NewUserRepository(db PgxPoolIface) *userRepository {
+func NewUserRepository(db PgxPoolIface) service.IUserRepository {
 	return &userRepository{db: db}
 }
 

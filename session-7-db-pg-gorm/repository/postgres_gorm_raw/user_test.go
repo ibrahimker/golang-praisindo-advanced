@@ -1,8 +1,9 @@
-package postgres_gorm_test
+package postgres_gorm_raw_test
 
 import (
 	"context"
 	"errors"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/repository/postgres_gorm_raw"
 	"github.com/stretchr/testify/require"
 	"regexp"
 	"testing"
@@ -13,7 +14,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/entity"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-7-db-pg-gorm/repository/postgres_gorm"
 )
 
 func setupSQLMock(t *testing.T) (sqlmock.Sqlmock, *gorm.DB) {
@@ -26,9 +26,7 @@ func setupSQLMock(t *testing.T) (sqlmock.Sqlmock, *gorm.DB) {
 	// Setup GORM with the mock DB
 	gormDB, gormDBErr := gorm.Open(postgres.New(postgres.Config{
 		Conn: db,
-	}), &gorm.Config{
-		SkipDefaultTransaction: true,
-	})
+	}), &gorm.Config{SkipDefaultTransaction: true})
 	if gormDBErr != nil {
 		t.Fatalf("failed to open GORM connection: %v", gormDBErr)
 	}
@@ -40,9 +38,10 @@ func TestUserRepository_CreateUser(t *testing.T) {
 	mock, gormDB := setupSQLMock(t)
 
 	// Initialize userRepository with mocked GORM connection
-	userRepo := postgres_gorm.NewUserRepository(gormDB)
+	userRepo := postgres_gorm_raw.NewUserRepository(gormDB)
 
-	expectedQueryString := regexp.QuoteMeta(`INSERT INTO "users" ("name","email","password","created_at","updated_at") VALUES ($1,$2,$3,$4,$5) RETURNING "id"`)
+	expectedQueryString := regexp.QuoteMeta("INSERT INTO users (name, email, password, created_at, updated_at) " +
+		"VALUES ($1, $2, $3, NOW(), NOW()) RETURNING id")
 
 	t.Run("Positive Case", func(t *testing.T) {
 		// Expected user data to insert
@@ -57,6 +56,7 @@ func TestUserRepository_CreateUser(t *testing.T) {
 		mock.ExpectQuery(expectedQueryString).
 			WillReturnRows(sqlmock.NewRows([]string{"id"}).
 				AddRow(1)) // Mock the result of the INSERT operation
+		//mock.ExpectCommit()
 
 		// Call the CreateUser method
 		createdUser, err := userRepo.CreateUser(context.Background(), user)
@@ -80,7 +80,6 @@ func TestUserRepository_CreateUser(t *testing.T) {
 		// Set mock expectations for the transaction
 		mock.ExpectQuery(expectedQueryString).
 			WillReturnError(errors.New("db error"))
-		mock.ExpectRollback()
 
 		// Call the CreateUser method
 		createdUser, err := userRepo.CreateUser(context.Background(), user)
@@ -94,13 +93,13 @@ func TestUserRepository_CreateUser(t *testing.T) {
 func TestUserRepository_GetUserByID(t *testing.T) {
 	// Setup SQL mock
 	mock, gormDB := setupSQLMock(t)
-	userRepo := postgres_gorm.NewUserRepository(gormDB)
+	userRepo := postgres_gorm_raw.NewUserRepository(gormDB)
 
-	expectedQueryString := regexp.QuoteMeta(`SELECT "id","name","email","password","created_at","updated_at" FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" LIMIT $2`)
+	expectedQueryString := regexp.QuoteMeta("SELECT id, name, email, password, created_at, updated_at FROM users WHERE id = $1")
 
 	t.Run("Positive Case", func(t *testing.T) {
 		mock.ExpectQuery(expectedQueryString).
-			WithArgs(1, 1).
+			WithArgs(1).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
 				AddRow(1, "John Doe", "john.doe@example.com"))
 
@@ -112,7 +111,7 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 
 	t.Run("No data found Case", func(t *testing.T) {
 		mock.ExpectQuery(expectedQueryString).
-			WithArgs(1, 1).
+			WithArgs(1).
 			WillReturnError(gorm.ErrRecordNotFound)
 
 		user, err := userRepo.GetUserByID(context.Background(), 1)
@@ -122,7 +121,7 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 
 	t.Run("Negative Case", func(t *testing.T) {
 		mock.ExpectQuery(expectedQueryString).
-			WithArgs(1, 1).
+			WithArgs(1).
 			WillReturnError(errors.New("db down"))
 
 		user, err := userRepo.GetUserByID(context.Background(), 1)
@@ -134,18 +133,11 @@ func TestUserRepository_GetUserByID(t *testing.T) {
 func TestUserRepository_UpdateUser(t *testing.T) {
 	// Setup SQL mock
 	mock, gormDB := setupSQLMock(t)
-	userRepo := postgres_gorm.NewUserRepository(gormDB)
+	userRepo := postgres_gorm_raw.NewUserRepository(gormDB)
 
-	expectedSelectQueryString := regexp.QuoteMeta(`SELECT "id","name","email","password","created_at","updated_at" FROM "users" WHERE "users"."id" = $1 ORDER BY "users"."id" LIMIT $2`)
+	expectedUpdateQueryString := regexp.QuoteMeta("UPDATE users SET name = $1, email = $2, updated_at = NOW() WHERE id = $3")
 
-	expectedUpdateQueryString := regexp.QuoteMeta(`UPDATE "users" SET "name"=$1,"email"=$2,"password"=$3,"created_at"=$4,"updated_at"=$5 WHERE "id" = $6`)
-
-	t.Run("Positive Case - select and update success", func(t *testing.T) {
-		mock.ExpectQuery(expectedSelectQueryString).
-			WithArgs(1, 1).
-			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
-				AddRow(1, "John Doe", "john.doe@example.com"))
-
+	t.Run("Positive Case - update success", func(t *testing.T) {
 		mock.ExpectExec(expectedUpdateQueryString).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -161,32 +153,9 @@ func TestUserRepository_UpdateUser(t *testing.T) {
 		require.Equal(t, user.Email, updatedUser.Email)
 	})
 
-	t.Run("Negative Case - error on selecting rows", func(t *testing.T) {
-		mock.ExpectQuery(expectedSelectQueryString).
-			WithArgs(1, 1).
-			WillReturnError(errors.New("database down"))
-
-		user := entity.User{
-			ID:    1,
-			Name:  "Updated Name",
-			Email: "updated.email@example.com",
-		}
-
-		updatedUser, err := userRepo.UpdateUser(context.Background(), user.ID, user)
-
-		require.Error(t, err)
-		require.Empty(t, updatedUser)
-	})
-
 	t.Run("Negative Case - error on updating rows", func(t *testing.T) {
-		mock.ExpectQuery(expectedSelectQueryString).
-			WithArgs(1, 1).
-			WillReturnRows(sqlmock.NewRows([]string{"id", "name", "email"}).
-				AddRow(1, "John Doe", "john.doe@example.com"))
-
 		mock.ExpectExec(expectedUpdateQueryString).
 			WillReturnError(errors.New("db error"))
-		mock.ExpectRollback()
 
 		user := entity.User{
 			ID:    1,
@@ -204,9 +173,9 @@ func TestUserRepository_UpdateUser(t *testing.T) {
 func TestUserRepository_DeleteUser(t *testing.T) {
 	// Setup SQL mock
 	mock, gormDB := setupSQLMock(t)
-	userRepo := postgres_gorm.NewUserRepository(gormDB)
+	userRepo := postgres_gorm_raw.NewUserRepository(gormDB)
 
-	expectedQueryString := regexp.QuoteMeta(`DELETE FROM "users" WHERE "users"."id" = $1`)
+	expectedQueryString := regexp.QuoteMeta("DELETE FROM users WHERE id = $1")
 
 	t.Run("Positive Case", func(t *testing.T) {
 		mock.ExpectExec(expectedQueryString).
@@ -218,11 +187,9 @@ func TestUserRepository_DeleteUser(t *testing.T) {
 	})
 
 	t.Run("Negative Case", func(t *testing.T) {
-
 		mock.ExpectExec(expectedQueryString).
 			WithArgs(1).
 			WillReturnError(errors.New("db error"))
-		mock.ExpectRollback()
 
 		err := userRepo.DeleteUser(context.Background(), 1)
 
@@ -233,9 +200,9 @@ func TestUserRepository_DeleteUser(t *testing.T) {
 func TestUserRepository_GetAllUsers(t *testing.T) {
 	// Setup SQL mock
 	mock, gormDB := setupSQLMock(t)
-	userRepo := postgres_gorm.NewUserRepository(gormDB)
+	userRepo := postgres_gorm_raw.NewUserRepository(gormDB)
 
-	expectedQueryString := regexp.QuoteMeta(`SELECT "id","name","email","password","created_at","updated_at" FROM "users"`)
+	expectedQueryString := regexp.QuoteMeta("SELECT id, name, email, password, created_at, updated_at FROM users")
 
 	t.Run("Positive Case", func(t *testing.T) {
 		mock.ExpectQuery(expectedQueryString).
