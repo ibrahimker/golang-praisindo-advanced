@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	pb "github.com/ibrahimker/golang-praisindo-advanced/session-8-introduction-grpc/proto/helloworld/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 	"net"
+	"time"
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -15,7 +18,17 @@ type server struct {
 
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.SayHelloRequest) (*pb.SayHelloResponse, error) {
-	return &pb.SayHelloResponse{Message: "Hello World"}, nil
+	hello := &pb.Hello{
+		Id:        0,
+		Name:      "test nama",
+		Active:    false,
+		Type:      pb.HelloType_HELLO_ACTIVE,
+		Schools:   []string{"sd 1", "smp 2"},
+		CreatedAt: timestamppb.New(time.Now().Add(-4 * time.Hour)), // 4 hours ago
+		UpdatedAt: timestamppb.New(time.Now()),
+	}
+	fmt.Println(hello)
+	return &pb.SayHelloResponse{Message: fmt.Sprintf("Hello World %s", in.GetName()), Hello: hello}, nil
 }
 
 func main() {

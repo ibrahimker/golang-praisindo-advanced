@@ -2,6 +2,8 @@ syntax = "proto3";
 
 option go_package = "github.com/ibrahimker/golang-praisindo-advanced/session-8-introduction-grpc/proto/helloworld";
 
+import "google/protobuf/timestamp.proto";
+
 package proto.helloworld.v1;
 
 service GreeterService {
@@ -14,4 +16,22 @@ message SayHelloRequest {
 
 message SayHelloResponse {
   string message = 1; // Pesan greeting
+  Hello hello = 2;
+}
+
+message Hello {
+  int32 id = 1;
+  string name = 2;
+  bool active = 3;
+  HelloType type = 4;
+  repeated string schools = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+enum HelloType {
+  HELLO_TYPE_UNSPECIFIED = 0;
+  HELLO_TYPE_STANDARD = 1;
+  HELLO_TYPE_ACTIVE = 2;
+  HELLO_TYPE_INACTIVE = 3;
 }
