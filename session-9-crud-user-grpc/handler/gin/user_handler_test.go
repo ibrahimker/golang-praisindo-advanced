@@ -1,7 +1,8 @@
-package handler_test
+package gin_test
 
 import (
 	"errors"
+	gin2 "github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/handler/gin"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
@@ -11,7 +12,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/entity"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/handler"
 	mock_service "github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/test/mock/service"
 )
 
@@ -20,7 +20,7 @@ func TestUserHandler_CreateUser(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mock_service.NewMockIUserService(ctrl)
-	userHandler := handler.NewUserHandler(mockService)
+	userHandler := gin2.NewUserHandler(mockService)
 
 	gin.SetMode(gin.TestMode)
 
@@ -98,7 +98,7 @@ func TestUserHandler_GetUser(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mock_service.NewMockIUserService(ctrl)
-	userHandler := handler.NewUserHandler(mockService)
+	userHandler := gin2.NewUserHandler(mockService)
 
 	gin.SetMode(gin.TestMode)
 
@@ -152,7 +152,7 @@ func TestUserHandler_UpdateUser(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mock_service.NewMockIUserService(ctrl)
-	userHandler := handler.NewUserHandler(mockService)
+	userHandler := gin2.NewUserHandler(mockService)
 
 	gin.SetMode(gin.TestMode)
 
@@ -228,7 +228,7 @@ func TestUserHandler_DeleteUser(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mock_service.NewMockIUserService(ctrl)
-	userHandler := handler.NewUserHandler(mockService)
+	userHandler := gin2.NewUserHandler(mockService)
 
 	gin.SetMode(gin.TestMode)
 
@@ -278,7 +278,7 @@ func TestUserHandler_GetAllUsers(t *testing.T) {
 	defer ctrl.Finish()
 
 	mockService := mock_service.NewMockIUserService(ctrl)
-	userHandler := handler.NewUserHandler(mockService)
+	userHandler := gin2.NewUserHandler(mockService)
 
 	gin.SetMode(gin.TestMode)
 

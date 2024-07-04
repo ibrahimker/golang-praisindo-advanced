@@ -3,12 +3,12 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/handler"
+	gin2 "github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/handler/gin"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/middleware"
 )
 
 // SetupRouter menginisialisasi dan mengatur rute untuk aplikasi
-func SetupRouter(r *gin.Engine, userHandler handler.IUserHandler) {
+func SetupRouter(r *gin.Engine, userHandler gin2.IUserHandler) {
 	// Mengatur endpoint publik untuk pengguna
 	usersPublicEndpoint := r.Group("/users")
 	// Rute untuk mendapatkan pengguna berdasarkan ID
