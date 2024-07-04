@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	pb "github.com/ibrahimker/golang-praisindo-advanced/session-8-introduction-grpc/proto"
+	pb "github.com/ibrahimker/golang-praisindo-advanced/session-8-introduction-grpc/proto/helloworld/v1"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -10,12 +10,12 @@ import (
 
 // server is used to implement helloworld.GreeterServer.
 type server struct {
-	pb.UnimplementedGreeterServer
+	pb.UnimplementedGreeterServiceServer
 }
 
 // SayHello implements helloworld.GreeterServer
-func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
-	return &pb.HelloReply{Message: "Hello " + in.Name}, nil
+func (s *server) SayHello(ctx context.Context, in *pb.SayHelloRequest) (*pb.SayHelloResponse, error) {
+	return &pb.SayHelloResponse{Message: "Hello World"}, nil
 }
 
 func main() {
@@ -28,7 +28,7 @@ func runServer() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &server{})
+	pb.RegisterGreeterServiceServer(s, &server{})
 	log.Println("Server is running on port :50051")
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)

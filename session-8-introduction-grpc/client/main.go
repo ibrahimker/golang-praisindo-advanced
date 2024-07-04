@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	pb "github.com/ibrahimker/golang-praisindo-advanced/session-8-introduction-grpc/proto"
+	pb "github.com/ibrahimker/golang-praisindo-advanced/session-8-introduction-grpc/proto/helloworld/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"log"
@@ -18,10 +18,10 @@ func runClient() {
 		log.Fatalf("did not connect: %v", err)
 	}
 	defer conn.Close()
-	greeterClient := pb.NewGreeterClient(conn)
+	greeterClient := pb.NewGreeterServiceClient(conn)
 
 	name := "world"
-	r, err := greeterClient.SayHello(context.Background(), &pb.HelloRequest{Name: name})
+	r, err := greeterClient.SayHello(context.Background(), &pb.SayHelloRequest{Name: name})
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}
