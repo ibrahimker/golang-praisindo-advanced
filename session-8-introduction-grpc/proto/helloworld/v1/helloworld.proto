@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+option go_package = "github.com/ibrahimker/golang-praisindo-advanced/session-8-introduction-grpc/proto/helloworld";
+
+package proto.helloworld.v1;
+
+service GreeterService {
+  rpc SayHello (SayHelloRequest) returns (SayHelloResponse) {}
+}
+
+message SayHelloRequest {
+  string name = 1; // Nama pengguna
+}
+
+message SayHelloResponse {
+  string message = 1; // Pesan greeting
+}
