@@ -22,7 +22,7 @@ func (s *server) SayHello(ctx context.Context, in *pb.SayHelloRequest) (*pb.SayH
 		Id:        0,
 		Name:      "test nama",
 		Active:    false,
-		Type:      pb.HelloType_HELLO_ACTIVE,
+		Type:      pb.HelloType_HELLO_TYPE_ACTIVE,
 		Schools:   []string{"sd 1", "smp 2"},
 		CreatedAt: timestamppb.New(time.Now().Add(-4 * time.Hour)), // 4 hours ago
 		UpdatedAt: timestamppb.New(time.Now()),
