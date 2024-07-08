@@ -4,15 +4,39 @@ option go_package = "github.com/ibrahimker/golang-praisindo-advanced/session-10-
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
 
 package proto.user_service.v1;
 
 service UserService {
-  rpc GetUsers (google.protobuf.Empty) returns (GetUsersResponse) {}
-  rpc GetUserByID (GetUserByIDRequest) returns (GetUserByIDResponse) {}
-  rpc CreateUser (CreateUserRequest) returns (MutationResponse) {}
-  rpc UpdateUser (UpdateUserRequest) returns (MutationResponse) {}
-  rpc DeleteUser (DeleteUserRequest) returns (MutationResponse) {}
+  rpc GetUsers (google.protobuf.Empty) returns (GetUsersResponse) {
+    option (google.api.http) = {
+      get: "/v1/users"
+    };
+  }
+  rpc GetUserByID (GetUserByIDRequest) returns (GetUserByIDResponse) {
+    option (google.api.http) = {
+      get: "/v1/users/{id}"
+    };
+  }
+  rpc CreateUser (CreateUserRequest) returns (MutationResponse) {
+    option (google.api.http) = {
+      post: "/v1/users",
+      body: "*"
+    };
+  }
+  rpc UpdateUser (UpdateUserRequest) returns (MutationResponse) {
+    option (google.api.http) = {
+      put: "/v1/users/{id}",
+      body: "*"
+    };
+  }
+  rpc DeleteUser (DeleteUserRequest) returns (MutationResponse) {
+    option (google.api.http) = {
+      delete: "/v1/users/{id}",
+      body: "*"
+    };
+  }
 }
 
 message User {
