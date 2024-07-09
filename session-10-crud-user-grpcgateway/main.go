@@ -72,5 +72,5 @@ func main() {
 	gwServer := gin.Default()
 	gwServer.Group("v1/*{grpc_gateway}").Any("", gin.WrapH(gwmux))
 	log.Println("Running grpc gateway server in port :8080")
-	_ = gwServer.Run()
+	_ = gwServer.Run(":8080")
 }

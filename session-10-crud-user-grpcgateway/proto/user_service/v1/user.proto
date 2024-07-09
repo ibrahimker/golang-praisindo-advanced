@@ -5,8 +5,18 @@ option go_package = "github.com/ibrahimker/golang-praisindo-advanced/session-10-
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
+import "protoc-gen-openapiv2/options/annotations.proto";
 
 package proto.user_service.v1;
+
+option (grpc.gateway.protoc_gen_openapiv2.options.openapiv2_swagger) = {
+  info : {
+    title : "User Service",
+    version : "v1",
+    description : "User service handle API for CRUD users"
+  },
+  host : "localhost:8080",
+};
 
 service UserService {
   rpc GetUsers (google.protobuf.Empty) returns (GetUsersResponse) {
