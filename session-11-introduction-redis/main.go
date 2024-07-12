@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/redis/go-redis/v9"
+	"time"
 )
 
 var ctx = context.Background()
@@ -15,7 +16,7 @@ func main() {
 		DB:       0,  // use default DB
 	})
 
-	err := rdb.Set(ctx, "key", "value", 0).Err()
+	err := rdb.Set(ctx, "key", "value", 60*time.Second).Err()
 	if err != nil {
 		panic(err)
 	}

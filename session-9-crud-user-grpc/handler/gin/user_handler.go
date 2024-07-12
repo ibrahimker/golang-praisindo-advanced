@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/entity"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/service"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/entity"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/service"
 )
 
 // IUserHandler mendefinisikan interface untuk handler user

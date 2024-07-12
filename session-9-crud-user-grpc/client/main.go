@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	pb "github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/proto/user_service/v1"
+	pb "github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/proto/user_service/v1"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"google.golang.org/grpc"

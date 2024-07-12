@@ -3,9 +3,9 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/entity"
-	pb "github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/proto/user_service/v1"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/service"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-11-crud-user-grpcgateway-cache/entity"
+	pb "github.com/ibrahimker/golang-praisindo-advanced/session-11-crud-user-grpcgateway-cache/proto/user_service/v1"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-11-crud-user-grpcgateway-cache/service"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"

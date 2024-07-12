@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/entity"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-11-crud-user-grpcgateway-cache/entity"
 )
 
 // IUserService mendefinisikan interface untuk layanan pengguna

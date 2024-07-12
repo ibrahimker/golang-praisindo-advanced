@@ -1,10 +1,10 @@
 package main
 
 import (
-	grpcHandler "github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/handler/grpc"
-	pb "github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/proto/user_service/v1"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/repository/postgres_gorm"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/service"
+	grpcHandler "github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/handler/grpc"
+	pb "github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/proto/user_service/v1"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/repository/postgres_gorm"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/service"
 	"google.golang.org/grpc"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"

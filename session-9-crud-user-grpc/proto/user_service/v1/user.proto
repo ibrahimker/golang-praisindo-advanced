@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/proto/user_service/v1;user";
+option go_package = "github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/proto/user_service/v1;user";
 
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/empty.proto";

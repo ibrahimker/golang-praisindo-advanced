@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/entity"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/repository/slice"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/service"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/entity"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/repository/slice"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/service"
 	"github.com/stretchr/testify/require"
 )
 
