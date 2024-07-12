@@ -2,7 +2,7 @@ package gin_test
 
 import (
 	"errors"
-	gin2 "github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/handler/gin"
+	gin2 "github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/handler/gin"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
@@ -11,8 +11,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	"github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/entity"
-	mock_service "github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/test/mock/service"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/entity"
+	mock_service "github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/test/mock/service"
 )
 
 func TestUserHandler_CreateUser(t *testing.T) {

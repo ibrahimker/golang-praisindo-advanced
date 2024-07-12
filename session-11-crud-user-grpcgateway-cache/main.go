@@ -8,6 +8,7 @@ import (
 	pb "github.com/ibrahimker/golang-praisindo-advanced/session-11-crud-user-grpcgateway-cache/proto/user_service/v1"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-11-crud-user-grpcgateway-cache/repository/postgres_gorm_raw"
 	"github.com/ibrahimker/golang-praisindo-advanced/session-11-crud-user-grpcgateway-cache/service"
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"gorm.io/driver/postgres"
@@ -24,11 +25,18 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
 	// setup service
 
 	// uncomment to use postgres gorm
 	userRepo := postgres_gorm_raw.NewUserRepository(gormDB)
-	userService := service.NewUserService(userRepo)
+	userService := service.NewUserService(userRepo, rdb)
 	userHandler := grpcHandler.NewUserHandler(userService)
 
 	// Run the grpc server

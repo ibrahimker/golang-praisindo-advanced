@@ -1,7 +1,7 @@
 package middleware_test
 
 import (
-	"github.com/ibrahimker/golang-praisindo-advanced/session-11-user-redis-cache/middleware"
+	"github.com/ibrahimker/golang-praisindo-advanced/session-9-crud-user-grpc/middleware"
 	"github.com/stretchr/testify/require"
 	"net/http"
 	"net/http/httptest"
