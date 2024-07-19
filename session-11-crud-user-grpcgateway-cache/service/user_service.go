@@ -102,7 +102,7 @@ func (s *userService) UpdateUser(ctx context.Context, id int, user entity.User) 
 func (s *userService) DeleteUser(ctx context.Context, id int) error {
 	// delete redis key
 	redisKey := fmt.Sprintf(redisUserByIDKey, id)
-	if err := s.rdb.Del(ctx).Err(); err != nil {
+	if err := s.rdb.Del(ctx, redisKey).Err(); err != nil {
 		log.Println("gagal delete key redis", redisKey)
 	}
 	// Memanggil DeleteUser dari repository untuk menghapus pengguna berdasarkan ID
