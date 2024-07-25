@@ -1,0 +1,19 @@
+version: "1"
+services:
+  app:
+    image: go-hello-world:latest
+    ports:
+      - "8080:8080"
+  redis:
+    image: redis:5.0.12
+    command: redis-server --requirepass redispass
+    ports:
+      - 6379:6379
+  postgres:
+    image: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+    ports:
+      - 5432:5432
