@@ -25,18 +25,19 @@ var (
 func main() {
 	ctx := context.Background()
 	startTime := time.Now()
-	logger = slog.New(slog.NewTextHandler(os.Stdout, nil))
+	logger = slog.New(slog.NewTextHandler(os.Stderr, nil))
 	slog.SetDefault(logger)
 
 	httpClient = &http.Client{Timeout: 10 * time.Second}
 
-	slog.InfoContext(ctx, "Start retrieving users data")
+	slog.InfoContext(ctx, "Start retrieving users data", slog.Any("coba-key", "coba-value"))
 	users, err := GetUsers(ctx)
 	if err != nil {
 		slog.WarnContext(ctx, "error when hit GetUsers", slog.Any("error", err))
 		return
 	}
-	slog.InfoContext(ctx, fmt.Sprintf("Finished retrieving users data %d collected", len(users)))
+	slog.InfoContext(ctx, fmt.Sprintf("Finished retrieving users data %d collected", len(users)),
+		slog.Any("users", users))
 
 	slog.InfoContext(ctx, "Start generating csv users")
 	reportFile, _ := os.Create(basedir + "/users.csv")

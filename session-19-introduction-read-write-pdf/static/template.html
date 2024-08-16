@@ -98,16 +98,17 @@
 <main class="details">
     <div class="flex" style="margin-top: 1.5cm">
         <div>
+            <h1> {{ .FullName }}</h1>
             <p class="blue large-text" style="margin-top: 40px">
                 <strong>
-                    {{ name }}
+                    {{ .Name }}
                 </strong>
             </p>
             <p class="blue small-text" style="margin-top: -20px">
-                {{ email }}
+                {{ .Email }}
             </p>
             <p class="blue small-text" style="margin-top: -20px">
-                {{ phone }}
+                {{ .Phone }}
             </p>
         </div>
         <div style="padding-right: 0.5cm">
@@ -116,13 +117,13 @@
                     Details
                 </strong>
             </p>
-            {{#if invoiceNumber}}
+
             <p class="blue small-text" style="margin-top: -20px" align="right">
-                # {{ invoiceNumber }}
+                {{ .InvoiceNumber }}
             </p>
-            {{/if}}
+
             <p class="blue small-text" style="margin-top: -20px" align="right">
-                Date: {{ date }}
+                Date:
             </p>
         </div>
     </div>
@@ -133,28 +134,12 @@
             <th>Rate</th>
             <th>Amount</th>
         </tr>
-        {{#data}}
-        <tr>
-            <td style="width: 60%">{{ name }}</td>
-            <td>{{ unit }}</td>
-            <td>Rs. {{ cost }}</td>
-            <td>Rs. {{ amount }}</td>
-        </tr>
-        {{/data}}
     </table>
 
     <div class="billing-details">
         <div>
             <span>Subtotal:</span>
-            <span>Rs. {{ subTotal }}</span>
-        </div>
-        <div>
-            <span>CGST+IGST (12%):</span>
-            <span>Rs. {{ tax }}</span>
-        </div>
-        <div>
-            <span>Total:</span>
-            <span>Rs. {{ total }} </span>
+            <span>Rs. {{ .SubTotal }}</span>
         </div>
     </div>
 </main>
