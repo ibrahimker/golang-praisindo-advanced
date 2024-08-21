@@ -25,3 +25,17 @@ services:
       - postgres-db-read
     ports:
       - 8080:8080
+  read-db-inserter:
+    build:
+      dockerfile: config/dockerfile-read-db-inserter
+      context: .
+    depends_on:
+      - postgres-db-read
+  write-db-inserter:
+    build:
+      dockerfile: config/dockerfile-write-db-inserter
+      context: .
+    depends_on:
+      - postgres-db-write
+volumes:
+  pgdata:
