@@ -1,0 +1,41 @@
+services:
+  postgres-db-read:
+    image: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=praisindo
+    ports:
+      - 5432:5432
+    command: -p 5432
+  postgres-db-write:
+    image: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=praisindo
+    ports:
+      - 5433:5433
+    command: -p 5433
+  cqrs-main:
+    build:
+      dockerfile: config/dockerfile-main
+      context: .
+    depends_on:
+      - postgres-db-read
+    ports:
+      - 8080:8080
+  read-db-inserter:
+    build:
+      dockerfile: config/dockerfile-read-db-inserter
+      context: .
+    depends_on:
+      - postgres-db-read
+  write-db-inserter:
+    build:
+      dockerfile: config/dockerfile-write-db-inserter
+      context: .
+    depends_on:
+      - postgres-db-write
+volumes:
+  pgdata:
