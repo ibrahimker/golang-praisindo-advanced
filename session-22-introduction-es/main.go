@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/core/search"
 	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
@@ -62,5 +63,14 @@ func main() {
 	}
 	for _, hit := range res.Hits.Hits {
 		slog.Info("data", slog.Any("hit", hit.Source_))
+		hitByte, _ := hit.Source_.MarshalJSON()
+		var u User
+		_ = json.Unmarshal(hitByte, &u)
+		slog.Info("converted data to struct", slog.Any("user", u))
 	}
+}
+
+type User struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
 }
